@@ -18,80 +18,76 @@ define(['widget', 'jquery', 'jqueryUI'], function(widget, $, $UI) {
   }
 
   Window.prototype = $.extend({}, new widget.Widget(), { // 继承Widget类
-    alert: function(cfg){
-
-      var CFG = $.extend(this.cfg, cfg);
-      var that = this;
-
-      var boundingBox = $('<div class="window_boundingBox">' +
-                            '<div class="window_header">' +CFG.title+ '</div>' +
-                            '<div class="window_body">' +CFG.content+ '</div>' +
-                            '<div class="window_footer"><input class="window_alertBtn" type="button" value="' +CFG.text4alertBtn+ '"></div>' +
-                          '</div>');
-      boundingBox.appendTo('body');
+    renderUI: function() {
+      this.boundingBox = $(
+        '<div class="window_boundingBox">' +
+          '<div class="window_header">' +this.cfg.title+ '</div>' +
+          '<div class="window_body">' +this.cfg.content+ '</div>' +
+          '<div class="window_footer"><input class="window_alertBtn" type="button" value="' +this.cfg.text4alertBtn+ '"></div>' +
+        '</div>'
+      );
 
       // 遮罩层
-      if(CFG.hasMask) {
-        mask = $('<div class="window_mask"></div>');
-        mask.appendTo('body');
+      if(this.cfg.hasMask) {
+        this._mask = $('<div class="window_mask"></div>');
+        this._mask.appendTo('body');
       }
-
-      // 确定按钮
-      var btn = boundingBox.find('input');
-      btn.appendTo(boundingBox);
-      btn.click(function() {
-        CFG.handler4alertBtn && CFG.handler4alertBtn();
-        boundingBox.remove();
-        CFG.hasMask && mask.remove();
-        that.fire('alert');
-      });      
 
       // 关闭按钮
-      if(CFG.hasCloseBtn) {
-        var closeBtn = $('<span class="window_closeBtn">X</span>');
-        closeBtn.appendTo(boundingBox);
-        closeBtn.click(function() {
-          CFG.handler4closeBtn && CFG.handler4closeBtn();
-          boundingBox.remove();
-          CFG.hasMask && mask.remove();
-          that.fire('close');
-        });
+      if(this.cfg.hasCloseBtn) {
+        this.boundingBox.append('<span class="window_closeBtn">X</span>');
       }
 
-      // 弹框大小和定位
-      boundingBox.css({
-        width: CFG.width + 'px',
-        height: CFG.height + 'px',
-        left: (CFG.left || (window.innerWidth-CFG.width)/2) + 'px',
-        top: (CFG.top || (window.innerHeight-CFG.height)/2) + 'px'
+      this.boundingBox.appendTo(document.body);
+    },
+
+    bindUI: function() {
+      var that = this;
+      this.boundingBox.delegate('.window_alertBtn', 'click', function() {
+        that.fire('alert');
+        that.destroy();
+      }).delegate('.window_closeBtn', 'click', function() {
+        that.fire('close');
+        that.destroy();
       });
+      if(this.cfg.handler4alertBtn) {
+        this.on('alert', this.cfg.handler4alertBtn);
+      };
+      if(this.cfg.handler4closeBtn) {
+        this.on('close', this.cfg.handler4closeBtn);
+      };
+    },
 
-      // 皮肤设置
-      if(CFG.skinClassName) {
-        boundingBox.addClass(CFG.skinClassName);
-      }
-
-      // 拖动
-      if(CFG.isDraggable) {
-        if(CFG.dragHandle) {
-          boundingBox.draggable({
-            handle: CFG.dragHandle
+    syncUI: function() {
+      this.boundingBox.css({
+        width: this.cfg.width + 'px',
+        height: this.cfg.height + 'px',
+        left: (this.cfg.left || (window.innerWidth-this.cfg.width)/2) + 'px',
+        top: (this.cfg.top || (window.innerHeight-this.cfg.height)/2) + 'px'
+      });
+      if(this.cfg.skinClassName) {
+        this.boundingBox.addClass(this.cfg.skinClassName);
+      };
+      if(this.cfg.isDraggable) {
+        if(this.cfg.dragHandle) {
+          this.boundingBox.draggable({
+            handle: this.cfg.dragHandle
           });
         }else {
-          boundingBox.draggable();
-        }        
+          this.boundingBox.draggable();
+        }
       }
+    },
 
-      // if(CFG.handler4alertBtn) {
-      //   this.on('alert', CFG.handler4alertBtn);
-      // }
-      // if(CFG.handler4closeBtn) {
-      //   this.on('close', CFG.handler4closeBtn);
-      // }
+    destructor: function() {
+      this._mask && this._mask.remove();
+    },
 
-      // 实现连缀语法
+    alert: function(cfg) {
+      $.extend(this.cfg, cfg);
+      this.render();
       return this;
-    },    
+    }, 
 
     confirm: function(){},
     prompt: function(){},
