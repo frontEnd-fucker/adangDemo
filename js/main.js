@@ -26,15 +26,5 @@ require(['jquery', 'window'], function($, w) { // 因为我们在应用层也需
         alert('u click a close btn');
       }
     });
-
-    win.on('alert', function() {
-      alert('the second alert handler');
-    });
-    win.on('alert', function() {
-      alert('the third alert handler');
-    });
-    win.on('close', function() {
-      alert('the second close handler');
-    });
   });
 });
